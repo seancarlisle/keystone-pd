@@ -8,11 +8,11 @@ PASSWORD=''
 ROLEROLE=''
 
 function usage {
-   echo 'usage: ./$0 <tenant-name> <user-name> <password> <role>'
+   echo "usage: $0 <tenant-name> <user-name> <password> <role>"
 }
 
 
-function argParse {
+function argParse() {
    TENANTNAME=$1
    USERNAME=$2
    PASSWORD=$3
@@ -20,20 +20,19 @@ function argParse {
 }
 
 # Main script logic
-
-if [ $# == 1 ]
+if [ $# -ne 4 ]
 then
    usage
    exit 1
 fi
 
 #source the credentials file        
-sudo source /root/.novarc
+source /root/.novarc
 
-argParse
+argParse $*
 
 # Get the role ID for the desired role
-ROLEID=$(keystone role-list | awk -F '|' '/admin/ {print $2}')
+ROLEID=$(keystone role-list | awk -F '|' "/$ROLENAME/ {print $2}")
 
 # Create the new tenant
 TENANTID=$(keystone tenant-create --name $TENANTNAME | awk -F '|' '/\ id\ / {print $3}')
@@ -45,10 +44,13 @@ USERID=$(keystone user-create --name $USERNAME --tenant-id $TENANTID --pass $PAS
 keystone user-role-add --user-id $USERID --tenant-id $TENANTID --role-id $ROLEID &> /dev/null
 
 # Let's make sure things were created correctly
-if [ $(keystone tenant-list | grep $TENANTNAME) -ne 0 ]
+keystone tenant-list | grep $TENANTNAME &> /dev/null
+if [ $? -ne 0 ]
 then
    echo "Something went wrong!  User and tenant were not created successfully!\n"
    exit 1
 else
+   echo SUCCESS!
    exit 0
 fi
+
