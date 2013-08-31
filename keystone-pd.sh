@@ -28,7 +28,7 @@ then
 fi
 
 #source the credentials file        
-sudo source /root/.novarc
+source /root/.novarc
 
 argParse
 
